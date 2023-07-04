@@ -13,11 +13,11 @@ const applyChangeToValue = (
   let oldPlainTextValue = getPlainText(value, config)
 
   let lengthDelta = oldPlainTextValue.length - plainTextValue.length
-  if (selectionStartBefore === null) {
+  if (selectionStartBefore === 'undefined') {
     selectionStartBefore = selectionEndAfter + lengthDelta
   }
 
-  if (selectionEndBefore === null) {
+  if (selectionEndBefore === 'undefined') {
     selectionEndBefore = selectionStartBefore
   }
 
@@ -60,16 +60,22 @@ const applyChangeToValue = (
 
       // find start of diff
       spliceStart = 0
-      while (plainTextValue[spliceStart] === controlPlainTextValue[spliceStart])
+      while (plainTextValue[spliceStart] === oldPlainTextValue[spliceStart])
         spliceStart++
 
+      // find end of diff
+      let spliceEndOfNew = plainTextValue.length
+      let spliceEndOfOld = oldPlainTextValue.length
+      while (plainTextValue[spliceEndOfNew -1] === oldPlainTextValue[spliceEndOfOld - 1]) {
+        spliceEndOfNew--
+        spliceEndOfOld--
+      }
+
       // extract auto-corrected insertion
-      insert = plainTextValue.slice(spliceStart, selectionEndAfter)
+      insert = plainTextValue.slice(spliceStart, spliceEndOfNew)
 
       // find index of the unchanged remainder
-      spliceEnd = oldPlainTextValue.lastIndexOf(
-        plainTextValue.substring(selectionEndAfter)
-      )
+      spliceEnd = spliceEndOfOld >= spliceStart ? spliceEndOfOld : selectionEndAfter
 
       // re-map the corrected indices
       mappedSpliceStart = mapPlainTextIndex(value, config, spliceStart, 'START')
